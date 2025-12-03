@@ -8,11 +8,10 @@ int main()
 {
     factory<channels{1}, sample_rate{48000}> f;
 
-    auto gen = f.sine_wave(const_frequency(440_Hz));  // A4
-    auto mono = f.mono_adapter(std::move(gen));  // converts sample → array<sample,1>
-
-    auto synth = f.synthesizer(std::move(mono), 0.5f);
-
+    auto mono_sine = f.sine_wave(const_frequency(440_Hz));
+    auto synth = f.synthesizer(std::move(mono_sine));
+    synth.set_master_level(0.7f);
+    
     if (!synth.start())
     {
         return 1;

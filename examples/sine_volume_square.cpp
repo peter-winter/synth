@@ -5,25 +5,19 @@
 
 int main()
 {
-    constexpr sample_rate sr{48000};
-    constexpr channels    ch{2};
-    factory<ch, sr> f;
+    factory<channels{2}, sample_rate{48000}> f;
 
     auto square = f.square_wave(const_frequency(220_Hz));
 
-    // 0.25 Hz = 4-second cycle -> 2 s fade in, 2 s fade out
+    // 0.25 Hz LFO → 4-second swell
     auto lfo = f.sine_wave(const_frequency(0.25_Hz));
-
-    // Transform sine (-1..+1) -> 0..1 volume range
-    auto volume_env = f.mul_add(
-        std::move(lfo),
-        constant(0.5f),   // mul -> -0.5..0.5
-        constant(0.5f)    // add -> 0..1
-    );
+    auto volume_env = f.mul_add(std::move(lfo), constant(0.5f), constant(0.5f)); // -1..1 → 0..1
 
     auto modulated = f.volume(std::move(square), std::move(volume_env));
-    auto stereo    = f.channel_copier(std::move(modulated));
-    auto synth     = f.synthesizer(std::move(stereo), 0.5f);
+
+    // One modulated mono signal → auto-copied to stereo
+    auto synth = f.synthesizer(std::move(modulated));
+    synth.set_master_level(0.7f);
 
     if (!synth.start())
     {

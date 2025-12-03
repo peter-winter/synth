@@ -9,9 +9,9 @@ int main()
     factory<channels{2}, sample_rate{48000}> f;
 
     auto mono = f.square_wave(const_frequency(220_Hz));
-    auto stereo = f.channel_copier(std::move(mono));
 
-    auto synth = f.synthesizer(std::move(stereo), 0.5f);
+    auto synth = f.synthesizer(std::move(mono));
+    synth.set_master_level(0.7f);
 
     if (!synth.start())
     {

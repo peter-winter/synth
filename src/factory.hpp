@@ -2,12 +2,11 @@
 
 #include "strong_types.hpp"
 #include "generators.hpp"
-#include "channel_copier.hpp"
-#include "channel_aggregator.hpp"
-#include "mono_adapter.hpp"
+#include "mix.hpp"
 #include "volume.hpp"
 #include "synthesizer.hpp"
 #include "mull_add.hpp"
+#include "peak_limiter.hpp"
 
 template <channels Ch, sample_rate Sr>
 struct factory
@@ -18,29 +17,26 @@ struct factory
     template<typename Freq>
     auto square_wave(Freq freq) { return ::square_wave<Sr, Freq>(std::forward<Freq>(freq)); }
     
-    template<typename MonoGenerator>
-    auto channel_copier(MonoGenerator&& mono) { return ::channel_copier<Ch, MonoGenerator>(std::forward<MonoGenerator>(mono)); }
-    
-    template <typename... ChannelGeneratorTuples>
-        requires (sizeof...(ChannelGeneratorTuples) == Ch.value_ && sizeof...(ChannelGeneratorTuples) != 0)
-    auto channel_aggregator(ChannelGeneratorTuples&&... tuples)
-    {
-        return ::channel_aggregator<Ch, ChannelGeneratorTuples...>(
-            std::forward<ChannelGeneratorTuples>(tuples)...
-        );
-    }
-    
-    template <typename MonoGenerator>
-    auto mono_adapter(MonoGenerator&& gen) { return ::mono_adapter<MonoGenerator>(std::forward<MonoGenerator>(gen)); }
+    template<typename Freq>
+    auto saw_wave(Freq freq) { return ::saw_wave<Sr, Freq>(std::forward<Freq>(freq)); }
+
+    template <typename... Generators>
+    auto mix(Generators&&... gens) { return ::mix<polyphony_scale::equal_amplitude, Generators...>(std::forward<Generators>(gens)...); }
+
+    template <typename... Generators>
+    auto unison(Generators&&... gens) { return ::mix<polyphony_scale::equal_power, Generators...>(std::forward<Generators>(gens)...); }
 
     template <typename SampleGen, typename VolGen>
     auto volume(SampleGen&& s, VolGen&& v) { return ::volume(std::forward<SampleGen>(s), std::forward<VolGen>(v)); }
     
-    template<typename Generator>
-    auto synthesizer(Generator&& g, float master_level) { return ::synthesizer<Ch, Sr, Generator>(std::forward<Generator>(g), master_level); }
+    template <typename InputGen, typename CeilingGen = decltype(constant(0.95f)), typename ReleaseGen = decltype(constant(0.999f))>
+    auto peak_limiter(InputGen&& in, CeilingGen&& ceiling = constant(0.95f), ReleaseGen&& release = constant(0.999f)) { return ::peak_limiter<InputGen, CeilingGen, ReleaseGen>(std::forward<InputGen>(in), std::forward<CeilingGen>(ceiling), std::forward<ReleaseGen>(release)); }
+
+    template <typename... MonoGenerators>
+    auto synthesizer(MonoGenerators&&... gens) { return ::synthesizer<Ch, Sr, MonoGenerators...>(std::forward<MonoGenerators>(gens)...); }
     
     template <typename Gen, typename MulGen, typename AddGen>
     auto mul_add(Gen&& gen, MulGen&& mul_gen, AddGen&& add_gen) { return ::mul_add<Gen, MulGen, AddGen>(std::forward<Gen>(gen), std::forward<MulGen>(mul_gen), std::forward<AddGen>(add_gen)); }
 };
 
-static constexpr auto constant(float v) { return [v]{ return v; }; }
+

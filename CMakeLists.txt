@@ -6,49 +6,39 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ------------------------------------------------------------------
-# Fetch miniaudio
+# miniaudio (header-only)
 # ------------------------------------------------------------------
 include(FetchContent)
-
 FetchContent_Declare(
     miniaudio
     GIT_REPOSITORY https://github.com/mackron/miniaudio.git
     GIT_TAG        0.11.21
     GIT_SHALLOW    TRUE
 )
+FetchContent_MakeAvailable(miniaudio)
 
-FetchContent_MakeAvailable(miniaudio)   # ← this populates ${miniaudio_SOURCE_DIR}
-
-# miniaudio is header-only → create an INTERFACE library
 add_library(miniaudio_lib INTERFACE)
 target_include_directories(miniaudio_lib INTERFACE ${miniaudio_SOURCE_DIR})
 
-# ------------------------------------------------------------------
-# Global compile definitions (disable unused miniaudio parts)
-# ------------------------------------------------------------------
 add_compile_definitions(
     MA_NO_DECODING
     MA_NO_ENCODING
     MA_NO_GENERATION
 )
 
-# ------------------------------------------------------------------
-# Make src/ visible to all targets (so #include "factory.hpp" or similar works)
-# ------------------------------------------------------------------
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 # ------------------------------------------------------------------
-# Helper to add examples
+# Automatically find and build ALL examples
 # ------------------------------------------------------------------
-function(add_example name)
-    add_executable(${name} examples/${name}.cpp)
-    target_link_libraries(${name} PRIVATE miniaudio_lib pthread dl)
-endfunction()
+file(GLOB EXAMPLE_SOURCES
+    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+    "examples/*.cpp"
+)
 
-# ------------------------------------------------------------------
-# Build the three examples
-# ------------------------------------------------------------------
-add_example(mono_sine)
-add_example(stereo_square_copier)
-add_example(detuned_dminor_stereo)
-add_example(sine_volume_square)
+foreach(example_path ${EXAMPLE_SOURCES})
+    get_filename_component(example_name ${example_path} NAME_WE)  # strip .cpp
+    add_executable(${example_name} ${example_path})
+    target_link_libraries(${example_name} PRIVATE miniaudio_lib pthread dl)
+    message(STATUS "Added example: ${example_name}")
+endforeach()

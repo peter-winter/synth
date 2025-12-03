@@ -57,3 +57,24 @@ private:
     double counter_ = 0.0;
     Frequency freq_;
 };
+
+
+template <sample_rate Sr, typename Frequency>
+class saw_wave
+{
+public:
+    explicit saw_wave(Frequency&& freq) : freq_(std::move(freq)) {}
+
+    float operator()()
+    {
+        frequency f = freq_();
+        double increment = f.hz_ / Sr.value_;
+        phase_ += 2.0 * increment;
+        if (phase_ >= 1.0) phase_ -= 2.0;
+        return static_cast<float>(phase_);
+    }
+
+private:
+    double phase_ = -1.0;
+    Frequency freq_;
+};
