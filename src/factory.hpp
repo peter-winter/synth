@@ -5,7 +5,6 @@
 #include "mix.hpp"
 #include "volume.hpp"
 #include "synthesizer.hpp"
-#include "mull_add.hpp"
 #include "peak_limiter.hpp"
 
 template <channels Ch, sample_rate Sr>
@@ -20,23 +19,27 @@ struct factory
     template<typename Freq>
     auto saw_wave(Freq freq) { return ::saw_wave<Sr, Freq>(std::forward<Freq>(freq)); }
 
-    template <typename... Generators>
-    auto mix(Generators&&... gens) { return ::mix<polyphony_scale::equal_amplitude, Generators...>(std::forward<Generators>(gens)...); }
-
-    template <typename... Generators>
-    auto unison(Generators&&... gens) { return ::mix<polyphony_scale::equal_power, Generators...>(std::forward<Generators>(gens)...); }
-
-    template <typename SampleGen, typename VolGen>
-    auto volume(SampleGen&& s, VolGen&& v) { return ::volume(std::forward<SampleGen>(s), std::forward<VolGen>(v)); }
+    auto white_noise() { return ::white_noise{}; }
     
-    template <typename InputGen, typename CeilingGen = decltype(constant(0.95f)), typename ReleaseGen = decltype(constant(0.999f))>
-    auto peak_limiter(InputGen&& in, CeilingGen&& ceiling = constant(0.95f), ReleaseGen&& release = constant(0.999f)) { return ::peak_limiter<InputGen, CeilingGen, ReleaseGen>(std::forward<InputGen>(in), std::forward<CeilingGen>(ceiling), std::forward<ReleaseGen>(release)); }
-
-    template <typename... MonoGenerators>
-    auto synthesizer(MonoGenerators&&... gens) { return ::synthesizer<Ch, Sr, MonoGenerators...>(std::forward<MonoGenerators>(gens)...); }
+    auto pink_noise() { return ::pink_noise{}; }
     
-    template <typename Gen, typename MulGen, typename AddGen>
-    auto mul_add(Gen&& gen, MulGen&& mul_gen, AddGen&& add_gen) { return ::mul_add<Gen, MulGen, AddGen>(std::forward<Gen>(gen), std::forward<MulGen>(mul_gen), std::forward<AddGen>(add_gen)); }
+    template <typename... Gs>
+    auto mix(Gs&&... gens) { return ::mix<polyphony_scale::equal_amplitude, Gs...>(std::forward<Gs>(gens)...); }
+
+    template <typename... Gs>
+    auto unison(Gs&&... g) { return ::mix<polyphony_scale::equal_power, Gs...>(std::forward<Gs>(g)...); }
+
+    template <typename G, typename V>
+    auto volume(G&& g, V&& v) { return ::volume(std::forward<G>(g), std::forward<V>(v)); }
+    
+    template <typename G, typename Ceil = decltype(constant(0.95f)), typename Release = decltype(constant(0.999f))>
+    auto peak_limiter(G&& g, Ceil&& c = constant(0.95f), Release&& r = constant(0.999f)) { return ::peak_limiter<G, Ceil, Release>(std::forward<G>(g), std::forward<Ceil>(c), std::forward<Release>(r)); }
+
+    template <typename... Gs>
+    auto synthesizer(Gs&&... g) { return ::synthesizer<Ch, Sr, Gs...>(std::forward<Gs>(g)...); }
+    
+    template <typename G, typename M, typename A>
+    auto mul_add(G&& g, M&& m, A&& a) { return [g = std::move(g), m = std::move(m), a = std::move(a)] mutable { return g() * m() + a(); }; }
 };
 
 

@@ -2,9 +2,9 @@
 
 #include "frequency.hpp"
 #include "strong_types.hpp"
+#include "math.hpp"
 
 #include <cmath>
-#include <array>
 
 template <sample_rate Sr, typename Frequency>
 class sine_wave
@@ -18,18 +18,16 @@ public:
     {
         frequency f = freq_();
         float sample_v = std::sin(static_cast<float>(phase_));
-        double increment = TWO_PI * f.hz_ / Sr.value_;
+        double increment = math::two_pi * f.hz_ / Sr.value_;
         phase_ += increment;
-        if (phase_ >= TWO_PI)
-            phase_ -= TWO_PI;
+        if (phase_ >= math::two_pi)
+            phase_ -= math::two_pi;
         return sample_v;
     }
 
 private:
     double phase_ = 0.0;
     Frequency freq_;
-    
-    static constexpr double TWO_PI = 6.28318530717958647692;
 };
 
 template <sample_rate Sr, typename Frequency>
@@ -77,4 +75,53 @@ public:
 private:
     double phase_ = -1.0;
     Frequency freq_;
+};
+
+class white_noise
+{
+public:
+    white_noise() = default;
+
+    float operator()()
+    {
+        // Xorshift* — extremely fast, excellent statistical properties
+        // Completely real-time safe, no branches, no divisions
+        uint64_t x = state_;
+        x ^= x >> 12;
+        x ^= x << 25;
+        x ^= x >> 27;
+        state_ = x;
+
+        // Convert to float in [-1, 1)
+        uint64_t bits = (x * 0x2545F4914F6CDD1DULL) >> 32;  // magic constant
+        return static_cast<float>(static_cast<int32_t>(bits)) * (1.0f / 0x80000000);
+    }
+
+private:
+    uint64_t state_ = 0x853c49e6748fea9bULL;  // fixed nonzero seed
+};
+
+class pink_noise
+{
+public:
+    pink_noise() = default;
+
+    float operator()()
+    {
+        float white = white_gen_();
+
+        b0 = b0 * 0.99886f + white * 0.0555179f;
+        b1 = b1 * 0.99332f + white * 0.0750759f;
+        b2 = b2 * 0.96900f + white * 0.1538520f;
+        b3 = b3 * 0.86650f + white * 0.3104856f;
+        b4 = b4 * 0.55000f + white * 0.5329522f;
+        b5 = b5 * 0.31000f + white * -0.5329522f;
+        b6 = b6 * 0.11500f + white * -0.0963792f;
+
+        return (b0 + b1 + b2 + b3 + b4 + b5 + b6 + white * 0.5362f) * 0.11f;
+    }
+
+private:
+    white_noise white_gen_;
+    float b0 = 0, b1 = 0, b2 = 0, b3 = 0, b4 = 0, b5 = 0, b6 = 0;
 };

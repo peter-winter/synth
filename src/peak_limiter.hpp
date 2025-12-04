@@ -6,35 +6,34 @@
 #include <type_traits>
 #include <utility>
 
-template <typename InputGen, typename CeilingGen, typename ReleaseGen>
+template <typename G, typename Ceil, typename Release>
 class peak_limiter
 {
 public:
-    explicit peak_limiter(InputGen&& in, CeilingGen&& ceiling = constant(0.95f), ReleaseGen&& release = constant(0.999f))
-        : input_(std::forward<InputGen>(in))
-        , ceiling_gen_(std::forward<CeilingGen>(ceiling))
-        , release_gen_(std::forward<ReleaseGen>(release))
+    explicit peak_limiter(G&& g, Ceil&& c = constant(0.95f), Release&& r = constant(0.999f))
+        : g_(std::forward<G>(g))
+        , c_(std::forward<Ceil>(c))
+        , r_(std::forward<Release>(r))
         , peak_(0.0f)
     {}
 
     float operator()()
     {
-        float in      = input_();
-        float ceiling = ceiling_gen_();
-        float release = release_gen_();
-
+        float in = g_();
+        float c = c_();
+        
         // One-pole peak detector (leaky max)
         float abs_sample = std::abs(in);
-        peak_ = std::max(abs_sample, peak_ * release);
+        peak_ = std::max(abs_sample, peak_ * r_());
 
         // Soft gain reduction only when needed
-        float gain = (peak_ > ceiling) ? (ceiling / peak_) : 1.0f;
+        float gain = (peak_ > c) ? (c / peak_) : 1.0f;
         return in * gain;
     }
 
 private:
-    InputGen input_;
-    CeilingGen ceiling_gen_;
-    ReleaseGen release_gen_;
+    G g_;
+    Ceil c_;
+    Release r_;
     float peak_;
 };

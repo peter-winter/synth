@@ -1,6 +1,7 @@
 #pragma once
 
-constexpr inline auto constant(float v)
+template<typename T>
+constexpr inline auto constant(T v)
 {
     return [v]{ return v; };
 }

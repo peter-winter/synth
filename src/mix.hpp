@@ -1,19 +1,38 @@
 #pragma once
 
-#include "math.hpp"
+#include <cmath>
 #include <tuple>
 #include <utility>
 
-template <polyphony_scale Scale = polyphony_scale::equal_amplitude, typename... Generators>
-    requires (sizeof...(Generators) > 0)
+enum class polyphony_scale
+{
+    equal_amplitude,   // divide-by-N
+    equal_power        // divide-by-sqrt(N), supersaw mode
+};
+
+consteval float polyphony_gain(size_t voice_count, polyphony_scale mode)
+{
+    if (voice_count <= 1) return 1.0f;
+    switch (mode)
+    {
+        case polyphony_scale::equal_power:
+            return 1.0f / std::sqrt(static_cast<float>(voice_count));
+        case polyphony_scale::equal_amplitude:
+            return 1.0f / static_cast<float>(voice_count);
+    }
+    return 1.0f;
+}
+
+template <polyphony_scale Scale = polyphony_scale::equal_amplitude, typename... Gs>
+    requires (sizeof...(Gs) > 0)
 class mix
 {
-    static constexpr size_t voice_count = sizeof...(Generators);
-    static constexpr float gain = polyphony_gain_t<voice_count, Scale>::value;
+    static constexpr size_t voice_count = sizeof...(Gs);
+    static constexpr float gain = polyphony_gain(voice_count, Scale);
 
 public:
-    explicit mix(Generators&&... gens)
-        : generators_(std::forward<Generators>(gens)...)
+    explicit mix(Gs&&... g)
+        : generators_(std::forward<Gs>(g)...)
     {}
 
     float operator()()
@@ -22,5 +41,5 @@ public:
     }
 
 private:
-    std::tuple<Generators...> generators_;
+    std::tuple<Gs...> generators_;
 };

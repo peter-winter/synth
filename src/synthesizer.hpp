@@ -4,21 +4,20 @@
 #include "strong_types.hpp"
 #include "math.hpp"
 
-#define MINIAUDIO_IMPLEMENTATION
 #include <miniaudio.h>
 
 #include <atomic>
 #include <iostream>
 
-template <channels Ch, sample_rate Sr, typename... MonoGenerators>
-    requires (sizeof...(MonoGenerators) > 0 && sizeof...(MonoGenerators) <= Ch.value_)
+template <channels Ch, sample_rate Sr, typename... Gs>
+    requires (sizeof...(Gs) > 0 && sizeof...(Gs) <= Ch.value_)
 class synthesizer
 {
-    static constexpr size_t voice_count = sizeof...(MonoGenerators);
+    static constexpr size_t voice_count = sizeof...(Gs);
 
 public:
-    explicit synthesizer(MonoGenerators&&... gens)
-        : generators_(std::forward<MonoGenerators>(gens)...)
+    explicit synthesizer(Gs&&... g)
+        : generators_(std::forward<Gs>(g)...)
     {
         ma_device_config config = ma_device_config_init(ma_device_type_playback);
         config.playback.format   = ma_format_f32;
@@ -91,13 +90,13 @@ private:
             for (size_t ch = 0; ch < Ch.value_; ++ch)
             {
                 float sample = voices[ch % voice_count];
-                out[f * Ch.value_ + ch] = sample * perceptual_gain(level);
+                out[f * Ch.value_ + ch] = sample * math::perceptual_gain(level);
             }
         }
     }
 
     ma_device device_{};
-    std::tuple<MonoGenerators...> generators_;
+    std::tuple<Gs...> generators_;
     float master_level_ = 0.5f;
 
     std::atomic<bool> running_{false};

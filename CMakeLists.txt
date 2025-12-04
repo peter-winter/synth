@@ -6,7 +6,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
 # ------------------------------------------------------------------
-# miniaudio (header-only)
+# miniaudio
 # ------------------------------------------------------------------
 include(FetchContent)
 FetchContent_Declare(
@@ -26,19 +26,26 @@ add_compile_definitions(
     MA_NO_GENERATION
 )
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
-
 # ------------------------------------------------------------------
-# Automatically find and build ALL examples
+# Auto-collect all example sources except main.cpp
 # ------------------------------------------------------------------
-file(GLOB EXAMPLE_SOURCES
-    RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
+file(GLOB EXAMPLE_SOURCES 
+    CONFIGURE_DEPENDS
     "examples/*.cpp"
 )
 
-foreach(example_path ${EXAMPLE_SOURCES})
-    get_filename_component(example_name ${example_path} NAME_WE)  # strip .cpp
-    add_executable(${example_name} ${example_path})
-    target_link_libraries(${example_name} PRIVATE miniaudio_lib pthread dl)
-    message(STATUS "Added example: ${example_name}")
-endforeach()
+# Remove the dispatcher from the list
+list(FILTER EXAMPLE_SOURCES EXCLUDE REGEX "examples/main.cpp$")
+
+# ------------------------------------------------------------------
+# Single unified binary
+# ------------------------------------------------------------------
+add_executable(synth_demo
+    examples/main.cpp
+    ${EXAMPLE_SOURCES}
+)
+
+target_include_directories(synth_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_link_libraries(synth_demo PRIVATE miniaudio_lib pthread dl)
+
+

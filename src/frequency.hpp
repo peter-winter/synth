@@ -14,67 +14,62 @@ struct frequency
     float hz_;
 };
 
-constexpr frequency operator""_Hz(unsigned long long int v) noexcept
+constexpr inline frequency operator""_Hz(unsigned long long int v) noexcept
 {
     return frequency(static_cast<float>(v));
 }
 
-constexpr frequency operator""_Hz(long double v) noexcept
+constexpr inline frequency operator""_Hz(long double v) noexcept
 {
     return frequency(static_cast<float>(v));
 }
 
-constexpr frequency operator+(frequency f, float hz) noexcept
+constexpr inline frequency operator+(frequency f, float hz) noexcept
 {
     return frequency(f.hz_ + hz);
 }
 
-constexpr frequency operator+(float hz, frequency f) noexcept
+constexpr inline frequency operator+(float hz, frequency f) noexcept
 {
     return frequency(hz + f.hz_);
 }
 
-constexpr frequency operator+(frequency a, frequency b) noexcept
+constexpr inline frequency operator+(frequency a, frequency b) noexcept
 {
     return frequency(a.hz_ + b.hz_);
 }
 
-constexpr frequency operator-(frequency f, float hz) noexcept
+constexpr inline frequency operator-(frequency f, float hz) noexcept
 {
     return frequency(f.hz_ - hz);
 }
 
-constexpr frequency operator-(float hz, frequency f) noexcept
+constexpr inline frequency operator-(float hz, frequency f) noexcept
 {
     return frequency(hz - f.hz_);
 }
 
-constexpr frequency operator-(frequency a, frequency b) noexcept
+constexpr inline frequency operator-(frequency a, frequency b) noexcept
 {
     return frequency(a.hz_ - b.hz_);
 }
 
-constexpr frequency operator*(frequency f, float x) noexcept
+constexpr inline frequency operator*(frequency f, float x) noexcept
 {
     return frequency(f.hz_ * x);
 }
 
-constexpr frequency operator*(float x, frequency f) noexcept
+constexpr inline frequency operator*(float x, frequency f) noexcept
 {
     return frequency(x * f.hz_);
 }
 
-constexpr frequency operator/(frequency f, float x) noexcept
+constexpr inline frequency operator/(frequency f, float x) noexcept
 {
     return frequency(f.hz_ / x);
 }
 
-constexpr frequency operator/(float x, frequency f) noexcept
+constexpr inline frequency operator/(float x, frequency f) noexcept
 {
     return frequency(x / f.hz_);
-}
-
-constexpr inline auto const_frequency(frequency f)
-{
-    return [f]{ return f; };
 }
