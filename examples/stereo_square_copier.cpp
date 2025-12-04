@@ -12,7 +12,7 @@ int stereo_square_copier()
 
     auto mono = f.square_wave(constant(220_Hz));
 
-    auto synth = f.synthesizer(std::move(mono));
+    auto synth = f.synthesizer(mono);
     synth.set_master_level(0.7f);
 
     if (!synth.start())

@@ -16,8 +16,8 @@ class synthesizer
     static constexpr size_t voice_count = sizeof...(Gs);
 
 public:
-    explicit synthesizer(Gs&&... g)
-        : generators_(std::forward<Gs>(g)...)
+    explicit synthesizer(Gs... g)
+        : generators_(g...)
     {
         ma_device_config config = ma_device_config_init(ma_device_type_playback);
         config.playback.format   = ma_format_f32;

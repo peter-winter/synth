@@ -31,8 +31,8 @@ class mix
     static constexpr float gain = polyphony_gain(voice_count, Scale);
 
 public:
-    explicit mix(Gs&&... g)
-        : generators_(std::forward<Gs>(g)...)
+    explicit mix(Gs... g)
+        : generators_(g...)
     {}
 
     float operator()()

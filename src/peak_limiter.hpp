@@ -10,10 +10,10 @@ template <typename G, typename Ceil, typename Release>
 class peak_limiter
 {
 public:
-    explicit peak_limiter(G&& g, Ceil&& c = constant(0.95f), Release&& r = constant(0.999f))
-        : g_(std::forward<G>(g))
-        , c_(std::forward<Ceil>(c))
-        , r_(std::forward<Release>(r))
+    explicit peak_limiter(G g, Ceil c = constant(0.95f), Release r = constant(0.999f))
+        : g_(g)
+        , c_(c)
+        , r_(r)
         , peak_(0.0f)
     {}
 

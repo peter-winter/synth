@@ -10,8 +10,8 @@ template <sample_rate Sr, typename Frequency>
 class sine_wave
 {
 public:
-    explicit sine_wave(Frequency&& freq):
-        freq_(std::move(freq))
+    explicit sine_wave(Frequency freq):
+        freq_(freq)
     {}
     
     float operator()()
@@ -34,8 +34,8 @@ template <sample_rate Sr, typename Frequency>
 class square_wave
 {
 public:
-    explicit square_wave(Frequency&& freq):
-        freq_(std::move(freq))
+    explicit square_wave(Frequency freq):
+        freq_(freq)
     {}
     
     float operator()()
@@ -61,7 +61,7 @@ template <sample_rate Sr, typename Frequency>
 class saw_wave
 {
 public:
-    explicit saw_wave(Frequency&& freq) : freq_(std::move(freq)) {}
+    explicit saw_wave(Frequency freq) : freq_(freq) {}
 
     float operator()()
     {

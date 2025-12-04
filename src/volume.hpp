@@ -4,14 +4,12 @@
 
 #include <cmath>
 
-template <typename SampleGenerator, typename VolumeGenerator>
+template <typename G, typename V>
 class volume
 {
 public:
-    explicit volume(SampleGenerator&& samp_gen,
-                    VolumeGenerator&& vol_gen)
-        : sample_gen_(std::forward<SampleGenerator>(samp_gen))
-        , volume_gen_(std::forward<VolumeGenerator>(vol_gen))
+    explicit volume(G g, V v)
+        : sample_gen_(g), volume_gen_(v)
     {
     }
 
@@ -24,6 +22,6 @@ public:
     }
 
 private:
-    SampleGenerator sample_gen_;
-    VolumeGenerator volume_gen_;
+    G sample_gen_;
+    V volume_gen_;
 };

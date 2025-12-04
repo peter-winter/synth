@@ -23,7 +23,7 @@ int detuned_dminor_stereo()
     );
 
     // Proper polyphony mixing with equal-amplitude (safe default)
-    auto synth = f.synthesizer(std::move(voices));
+    auto synth = f.synthesizer(voices);
     synth.set_master_level(0.7f);
 
     if (!synth.start())

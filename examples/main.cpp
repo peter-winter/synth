@@ -5,31 +5,6 @@
 
 std::unordered_map<std::string, Example> examples;
 
-std::string pretty_name(const std::string& func_name)
-{
-    if (func_name.ends_with("_main"))
-    {
-        std::string s = func_name.substr(0, func_name.size() - 5);  // remove "_main"
-        std::string result;
-        bool capitalize = true;
-        for (char c : s)
-        {
-            if (c == '_')
-            {
-                result += ' ';
-                capitalize = true;
-            }
-            else
-            {
-                result += capitalize ? std::toupper(c) : c;
-                capitalize = false;
-            }
-        }
-        return result;
-    }
-    return func_name;
-}
-
 void print_usage()
 {
     std::cout << "Usage: synth_demo <example_name>\n\n";

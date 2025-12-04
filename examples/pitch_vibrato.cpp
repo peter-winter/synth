@@ -10,10 +10,10 @@ int pitch_vibrato()
     factory<channels{2}, sample_rate{48000}> f;
 
     auto lfo = f.sine_wave(constant(5_Hz));
-    auto vibrato = f.mul_add(std::move(lfo), constant(5_Hz), constant(440_Hz));
-    auto sweeping = f.sine_wave(std::move(vibrato));
+    auto vibrato = f.mul_add(lfo, constant(5_Hz), constant(440_Hz));
+    auto sweeping = f.sine_wave(vibrato);
     
-    auto synth = f.synthesizer(std::move(sweeping));
+    auto synth = f.synthesizer(sweeping);
     synth.set_master_level(0.7f);
 
     if (!synth.start())

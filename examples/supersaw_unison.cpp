@@ -22,9 +22,9 @@ int supersaw_unison()
         f.saw_wave(constant(notes::A(2) + 0.27_Hz))
     );
 
-    auto safe = f.peak_limiter(std::move(voices));
+    auto safe = f.peak_limiter(voices);
 
-    auto synth = f.synthesizer(std::move(safe));
+    auto synth = f.synthesizer(safe);
     synth.set_master_level(0.7f);
 
     if (!synth.start())
