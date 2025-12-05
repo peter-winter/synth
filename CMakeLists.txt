@@ -9,12 +9,14 @@ set(CMAKE_CXX_EXTENSIONS OFF)
 # miniaudio
 # ------------------------------------------------------------------
 include(FetchContent)
+
 FetchContent_Declare(
     miniaudio
     GIT_REPOSITORY https://github.com/mackron/miniaudio.git
     GIT_TAG        0.11.21
     GIT_SHALLOW    TRUE
 )
+
 FetchContent_MakeAvailable(miniaudio)
 
 add_library(miniaudio_lib INTERFACE)
@@ -27,25 +29,17 @@ add_compile_definitions(
 )
 
 # ------------------------------------------------------------------
-# Auto-collect all example sources except main.cpp
+# Collect ALL .cpp files in examples/ — automatically updates when you add new ones
 # ------------------------------------------------------------------
-file(GLOB EXAMPLE_SOURCES 
-    CONFIGURE_DEPENDS
-    "examples/*.cpp"
+file(GLOB EXAMPLE_SOURCES
+    CONFIGURE_DEPENDS                  # ← this is the magic
+    "${CMAKE_CURRENT_SOURCE_DIR}/examples/*.cpp"
 )
 
-# Remove the dispatcher from the list
-list(FILTER EXAMPLE_SOURCES EXCLUDE REGEX "examples/main.cpp$")
-
 # ------------------------------------------------------------------
-# Single unified binary
+# Executable
 # ------------------------------------------------------------------
-add_executable(synth_demo
-    examples/main.cpp
-    ${EXAMPLE_SOURCES}
-)
+add_executable(synth_demo ${EXAMPLE_SOURCES})
 
-target_include_directories(synth_demo PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/src)
+target_include_directories(synth_demo PRIVATE src)
 target_link_libraries(synth_demo PRIVATE miniaudio_lib pthread dl)
-
-

@@ -11,13 +11,13 @@ int sine_volume_square()
 
     auto square = f.square_wave(constant(220_Hz));
 
-    // 0.25 Hz LFO → 4-second swell
+    // 0.25 Hz LFO -> 4-second swell
     auto lfo = f.sine_wave(constant(0.25_Hz));
-    auto volume_env = f.mul_add(lfo, constant(0.5f), constant(0.5f)); // -1..1 → 0..1
+    auto volume_env = f.bias(lfo); // -1..1 -> 0..1
 
     auto modulated = f.volume(square, volume_env);
 
-    // One modulated mono signal → auto-copied to stereo
+    // One modulated mono signal -> auto-copied to stereo
     auto synth = f.synthesizer(modulated);
     synth.set_master_level(0.7f);
 

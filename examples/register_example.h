@@ -6,26 +6,20 @@
 #include <functional>
 #include <cctype>
 
-struct Example
-{
-    std::function<int()> func;
-    std::string description;
-};
 
-extern std::unordered_map<std::string, Example> examples;
+using ExampleMap = std::unordered_map<std::string, int (*)()>;
 
-inline auto& get_examples()
+inline ExampleMap& get_examples()
 {
-    return examples;
+    static ExampleMap map;
+    return map;
 }
 
-// Macro to register an example at static init time
-#define REGISTER_EXAMPLE(func) \
-    struct func##_registrar { \
-        func##_registrar() { \
+#define REGISTER_EXAMPLE(name) \
+    struct name##_registrar { \
+        name##_registrar() { \
             auto& map = get_examples(); \
-            std::string name = #func; \
-            map[name] = { func, #func }; \
+            map[#name] = &name; \
         } \
     }; \
-    static func##_registrar func##_registrar_instance
+    static name##_registrar name##_registrar_instance

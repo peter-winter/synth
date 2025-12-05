@@ -17,12 +17,12 @@ public:
     float operator()()
     {
         frequency f = freq_();
-        float sample_v = std::sin(static_cast<float>(phase_));
         double increment = math::two_pi * f.hz_ / Sr.value_;
-        phase_ += increment;
-        if (phase_ >= math::two_pi)
-            phase_ -= math::two_pi;
-        return sample_v;
+        phase_ += increment;                     // <--- no branch, no fmod
+        float sample = std::sin(static_cast<float>(phase_));
+        // phase_ is allowed to grow forever — double has ~53 bits mantissa
+        // > 200 years before precision loss at 48 kHz
+        return sample;
     }
 
 private:
@@ -66,14 +66,56 @@ public:
     float operator()()
     {
         frequency f = freq_();
-        double increment = f.hz_ / Sr.value_;
-        phase_ += 2.0 * increment;
-        if (phase_ >= 1.0) phase_ -= 2.0;
-        return static_cast<float>(phase_);
+        float sample = std::sin(static_cast<float>(phase_));
+        double increment = math::two_pi * f.hz_ / Sr.value_;
+        phase_ += increment;
+        if (phase_ >= math::two_pi)
+            phase_ -= math::two_pi;
+        return sample;
     }
 
 private:
     double phase_ = -1.0;
+    Frequency freq_;
+};
+
+template <sample_rate Sr, typename Frequency>
+class down_saw_wave
+{
+public:
+    explicit down_saw_wave(Frequency freq) : freq_(freq) {}
+
+    float operator()()
+    {
+        frequency f = freq_();
+        double increment = f.hz_ / Sr.value_;
+        phase_ += increment;
+        if (phase_ >= 1.0) phase_ -= 1.0;
+        return static_cast<float>(1.0 - phase_);   // +1 → -1 ramp
+    }
+
+private:
+    double phase_ = 0.0;
+    Frequency freq_;
+};
+
+template <sample_rate Sr, typename Frequency>
+class triangle_wave
+{
+public:
+    explicit triangle_wave(Frequency freq) : freq_(freq) {}
+
+    float operator()()
+    {
+        frequency f = freq_();
+        double increment = 2.0 * f.hz_ / Sr.value_;   // 2x speed because we fold twice
+        phase_ += increment;
+        if (phase_ >= 1.0) phase_ -= 2.0;
+        return static_cast<float>(phase_ < 0.0 ? -phase_ - 1.0 : phase_ - 1.0) * 2.0f - 1.0f;
+    }
+
+private:
+    double phase_ = 0.0;
     Frequency freq_;
 };
 
@@ -84,16 +126,16 @@ public:
 
     float operator()()
     {
-        // Xorshift* — extremely fast, excellent statistical properties
-        // Completely real-time safe, no branches, no divisions
+        // Xorshift* (Daniel Lemire / Sebastiano Vigna)
+        // Magic constant 0x2545F4914F6CDD1DULL from "Fast Random Integer Generation in an Interval" (PCG paper)
         uint64_t x = state_;
         x ^= x >> 12;
         x ^= x << 25;
         x ^= x >> 27;
         state_ = x;
 
-        // Convert to float in [-1, 1)
-        uint64_t bits = (x * 0x2545F4914F6CDD1DULL) >> 32;  // magic constant
+        // Convert to float in [-1, 1) — extremely high quality uniform distribution
+        uint64_t bits = (x * 0x2545F4914F6CDD1DULL) >> 32;
         return static_cast<float>(static_cast<int32_t>(bits)) * (1.0f / 0x80000000);
     }
 

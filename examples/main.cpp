@@ -3,15 +3,15 @@
 
 #include "register_example.h"
 
-std::unordered_map<std::string, Example> examples;
+auto& examples = get_examples();
 
 void print_usage()
 {
     std::cout << "Usage: synth_demo <example_name>\n\n";
     std::cout << "Available examples:\n";
-    for (const auto& [name, ex] : get_examples())
+    for (const auto& [name, _] : get_examples())
     {
-        std::cout << "  " << name << ", " << ex.description << "\n";
+        std::cout << "  " << name << "\n";
     }
     std::cout << "\n";
 }
@@ -41,6 +41,6 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    std::cout << "Running: " << it->second.description << "\n";
-    return it->second.func();
+    std::cout << "Running: " << it->first << "\n";
+    return it->second();
 }

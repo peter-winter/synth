@@ -12,14 +12,14 @@ int supersaw_unison()
 
     // 8 detuned saws → classic JP-8000 / Virus TI supersaw
     auto voices = f.unison(
-        f.saw_wave(constant(notes::A(2) - 0.20_Hz)),
-        f.saw_wave(constant(notes::A(2) - 0.12_Hz)),
-        f.saw_wave(constant(notes::A(2) - 0.05_Hz)),
-        f.saw_wave(constant(notes::A(2))),
-        f.saw_wave(constant(notes::A(2) + 0.06_Hz)),
-        f.saw_wave(constant(notes::A(2) + 0.13_Hz)),
-        f.saw_wave(constant(notes::A(2) + 0.19_Hz)),
-        f.saw_wave(constant(notes::A(2) + 0.27_Hz))
+        f.down_saw_wave(constant(notes::A(2) - 0.20_Hz)),
+        f.down_saw_wave(constant(notes::A(2) - 0.12_Hz)),
+        f.down_saw_wave(constant(notes::A(2) - 0.05_Hz)),
+        f.down_saw_wave(constant(notes::A(2))),
+        f.down_saw_wave(constant(notes::A(2) + 0.06_Hz)),
+        f.down_saw_wave(constant(notes::A(2) + 0.13_Hz)),
+        f.down_saw_wave(constant(notes::A(2) + 0.19_Hz)),
+        f.down_saw_wave(constant(notes::A(2) + 0.27_Hz))
     );
 
     auto safe = f.peak_limiter(voices);

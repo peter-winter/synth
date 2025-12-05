@@ -19,6 +19,12 @@ struct factory
     template<typename Freq>
     auto saw_wave(Freq freq) { return ::saw_wave<Sr, Freq>(freq); }
 
+    template<typename Freq>
+    auto down_saw_wave(Freq freq) { return ::down_saw_wave<Sr, Freq>(freq); }
+    
+    template<typename Freq>
+    auto triangle_wave(Freq freq) { return ::triangle_wave<Sr, Freq>(freq); }
+    
     auto white_noise() { return ::white_noise{}; }
     
     auto pink_noise()  { return ::pink_noise{}; }
@@ -40,6 +46,9 @@ struct factory
 
     template <typename G, typename M, typename A>
     auto mul_add(G g, M m, A a) { return [g, m, a] mutable { return g() * m() + a(); }; }
+    
+    template<typename T>
+    auto bias(T signal) { return [signal] mutable { return signal() * 0.5f + 0.5f; }; }
 };
 
 
