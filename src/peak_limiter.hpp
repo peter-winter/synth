@@ -3,7 +3,6 @@
 #include "constant.hpp"
 
 #include <cmath>
-#include <type_traits>
 #include <utility>
 
 template <typename G, typename Ceil, typename Release>

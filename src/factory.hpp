@@ -20,7 +20,7 @@ struct factory
     auto saw_wave(Freq freq) { return ::saw_wave<Sr, Freq>(freq); }
 
     template<typename Freq>
-    auto down_saw_wave(Freq freq) { return ::down_saw_wave<Sr, Freq>(freq); }
+    auto down_saw_wave(Freq freq) { return [g = saw_wave(freq)]() mutable -> float { return -g(); }; }
     
     template<typename Freq>
     auto triangle_wave(Freq freq) { return ::triangle_wave<Sr, Freq>(freq); }

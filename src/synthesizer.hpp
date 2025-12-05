@@ -6,7 +6,6 @@
 
 #include <miniaudio.h>
 
-#include <atomic>
 #include <iostream>
 
 template <channels Ch, sample_rate Sr, typename... Gs>
@@ -99,6 +98,6 @@ private:
     std::tuple<Gs...> generators_;
     float master_level_ = 0.5f;
 
-    std::atomic<bool> running_{false};
+    bool running_{false};
     bool is_initialized_{false};
 };

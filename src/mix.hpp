@@ -1,8 +1,6 @@
 #pragma once
 
 #include <cmath>
-#include <tuple>
-#include <utility>
 
 enum class polyphony_scale
 {

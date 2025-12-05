@@ -5,6 +5,7 @@
 #include "math.hpp"
 
 #include <cmath>
+#include <random>
 
 template <sample_rate Sr, typename Frequency>
 class sine_wave
@@ -66,36 +67,14 @@ public:
     float operator()()
     {
         frequency f = freq_();
-        float sample = std::sin(static_cast<float>(phase_));
-        double increment = math::two_pi * f.hz_ / Sr.value_;
+        double increment = f.hz_ / Sr.value_;
         phase_ += increment;
-        if (phase_ >= math::two_pi)
-            phase_ -= math::two_pi;
-        return sample;
+        if (phase_ >= 1.0) phase_ -= 1.0;
+        return static_cast<float>(2.0 * phase_ - 1.0);
     }
 
 private:
     double phase_ = -1.0;
-    Frequency freq_;
-};
-
-template <sample_rate Sr, typename Frequency>
-class down_saw_wave
-{
-public:
-    explicit down_saw_wave(Frequency freq) : freq_(freq) {}
-
-    float operator()()
-    {
-        frequency f = freq_();
-        double increment = f.hz_ / Sr.value_;
-        phase_ += increment;
-        if (phase_ >= 1.0) phase_ -= 1.0;
-        return static_cast<float>(1.0 - phase_);   // +1 → -1 ramp
-    }
-
-private:
-    double phase_ = 0.0;
     Frequency freq_;
 };
 
@@ -122,7 +101,14 @@ private:
 class white_noise
 {
 public:
-    white_noise() = default;
+    white_noise()
+    {
+        std::random_device rd;
+        state_ = static_cast<uint64_t>(rd()) << 32 | rd();  // 64 real entropy bits
+        if (state_ == 0) state_ = 0x853c49e6748fea9bULL;     // avoid all-zero
+        // warm up a few rounds to avoid bad initial bits
+        for (int i = 0; i < 8; ++i) (*this)();
+    }
 
     float operator()()
     {
