@@ -8,7 +8,7 @@
 
 int supersaw_unison()
 {
-    factory<channels{2}, sample_rate{48000}> f;
+    factory f(48000);
 
     // 8 detuned saws → classic JP-8000 / Virus TI supersaw
     auto voices = f.unison(
@@ -24,7 +24,7 @@ int supersaw_unison()
 
     auto safe = f.peak_limiter(voices);
 
-    auto synth = f.synthesizer(safe);
+    auto synth = f.synthesizer(2, safe);
     synth.set_master_level(0.7f);
 
     if (!synth.start())

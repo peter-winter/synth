@@ -1,24 +1,23 @@
 #pragma once
 
 #include "frequency.hpp"
-#include "strong_types.hpp"
 #include "math.hpp"
 
 #include <cmath>
 #include <random>
 
-template <sample_rate Sr, typename Frequency>
+template <typename Frequency>
 class sine_wave
 {
 public:
-    explicit sine_wave(Frequency freq):
-        freq_(freq)
+    sine_wave(uint32_t sample_rate, Frequency freq):
+        sample_rate_(sample_rate), freq_(freq)
     {}
     
     float operator()()
     {
         frequency f = freq_();
-        double increment = math::two_pi * f.hz_ / Sr.value_;
+        double increment = math::two_pi * f.hz_ / sample_rate_;
         phase_ += increment;                     // <--- no branch, no fmod
         float sample = std::sin(static_cast<float>(phase_));
         // phase_ is allowed to grow forever — double has ~53 bits mantissa
@@ -27,22 +26,23 @@ public:
     }
 
 private:
+    uint32_t sample_rate_; 
     double phase_ = 0.0;
     Frequency freq_;
 };
 
-template <sample_rate Sr, typename Frequency>
+template <typename Frequency>
 class square_wave
 {
 public:
-    explicit square_wave(Frequency freq):
-        freq_(freq)
+    square_wave(uint32_t sample_rate, Frequency freq):
+        sample_rate_(sample_rate), freq_(freq)
     {}
     
     float operator()()
     {
         frequency f = freq_();
-        double period_in_samples = Sr.value_ / f.hz_;
+        double period_in_samples = sample_rate_ / f.hz_;
         double half_period = period_in_samples / 2.0;
         
         counter_ += 1.0;
@@ -53,47 +53,52 @@ public:
     }
 
 private:
+    uint32_t sample_rate_; 
     double counter_ = 0.0;
     Frequency freq_;
 };
 
 
-template <sample_rate Sr, typename Frequency>
+template <typename Frequency>
 class saw_wave
 {
 public:
-    explicit saw_wave(Frequency freq) : freq_(freq) {}
+    saw_wave(uint32_t sample_rate, Frequency freq):
+        sample_rate_(sample_rate), freq_(freq) {}
 
     float operator()()
     {
         frequency f = freq_();
-        double increment = f.hz_ / Sr.value_;
+        double increment = f.hz_ / sample_rate_;
         phase_ += increment;
         if (phase_ >= 1.0) phase_ -= 1.0;
         return static_cast<float>(2.0 * phase_ - 1.0);
     }
 
 private:
+    uint32_t sample_rate_; 
     double phase_ = -1.0;
     Frequency freq_;
 };
 
-template <sample_rate Sr, typename Frequency>
+template <typename Frequency>
 class triangle_wave
 {
 public:
-    explicit triangle_wave(Frequency freq) : freq_(freq) {}
+    triangle_wave(uint32_t sample_rate, Frequency freq):
+        sample_rate_(sample_rate), freq_(freq) {}
 
     float operator()()
     {
         frequency f = freq_();
-        double increment = 2.0 * f.hz_ / Sr.value_;   // 2x speed because we fold twice
+        double increment = 2.0 * f.hz_ / sample_rate_;   // 2x speed because we fold twice
         phase_ += increment;
         if (phase_ >= 1.0) phase_ -= 2.0;
         return static_cast<float>(phase_ < 0.0 ? -phase_ - 1.0 : phase_ - 1.0) * 2.0f - 1.0f;
     }
 
 private:
+    uint32_t sample_rate_; 
     double phase_ = 0.0;
     Frequency freq_;
 };

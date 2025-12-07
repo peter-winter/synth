@@ -45,10 +45,13 @@ public:
 
     using events_view = std::ranges::subrange<std::vector<timed_event>::const_iterator>;
         
-    auto operator()() -> events_view
+    void inc()
     {
         ++current_sample_;
-
+    }
+    
+    events_view get_events()
+    {
         if (next_event_it_ == events_.end() || current_sample_ < next_event_it_->when)
             return {events_.end(), events_.end()};
 

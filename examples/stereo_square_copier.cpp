@@ -1,6 +1,5 @@
 #include "register_example.h"
 #include "factory.hpp"
-#include "strong_types.hpp"
 #include "frequency.hpp"
 #include "constant.hpp"
 
@@ -8,11 +7,11 @@
 
 int stereo_square_copier()
 {
-    factory<channels{2}, sample_rate{48000}> f;
+    factory f(48000);
 
     auto mono = f.square_wave(constant(220_Hz));
 
-    auto synth = f.synthesizer(mono);
+    auto synth = f.synthesizer(2, mono);
     synth.set_master_level(0.7f);
 
     if (!synth.start())

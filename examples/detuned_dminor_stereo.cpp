@@ -8,7 +8,7 @@
 
 int detuned_dminor_stereo()
 {
-    factory<channels{2}, sample_rate{48000}> f;
+    factory f(48000);
 
     // Eight detuned oscillators — classic rich chord
     auto voices = f.mix(
@@ -23,7 +23,7 @@ int detuned_dminor_stereo()
     );
 
     // Proper polyphony mixing with equal-amplitude (safe default)
-    auto synth = f.synthesizer(voices);
+    auto synth = f.synthesizer(2, voices);
     synth.set_master_level(0.7f);
 
     if (!synth.start())

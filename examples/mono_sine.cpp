@@ -7,10 +7,10 @@
 
 int mono_sine()
 {
-    factory<channels{1}, sample_rate{48000}> f;
+    factory f(48000);
 
     auto mono_sine = f.sine_wave(constant(440_Hz));
-    auto synth = f.synthesizer(mono_sine);
+    auto synth = f.synthesizer(1, mono_sine);
     synth.set_master_level(0.7f);
     
     if (!synth.start())

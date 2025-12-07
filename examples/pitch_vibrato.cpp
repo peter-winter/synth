@@ -7,13 +7,13 @@
 
 int pitch_vibrato()
 {
-    factory<channels{2}, sample_rate{48000}> f;
+    factory f(48000);
 
     auto lfo = f.sine_wave(constant(5_Hz));
     auto vibrato = f.mul_add(lfo, constant(5_Hz), constant(440_Hz));
     auto sweeping = f.sine_wave(vibrato);
     
-    auto synth = f.synthesizer(sweeping);
+    auto synth = f.synthesizer(2, sweeping);
     synth.set_master_level(0.7f);
 
     if (!synth.start())

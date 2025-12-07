@@ -1,27 +1,29 @@
 // synthesizer.hpp
 #pragma once
 
-#include "strong_types.hpp"
 #include "math.hpp"
 
 #include <miniaudio.h>
 
 #include <iostream>
 
-template <channels Ch, sample_rate Sr, typename... Gs>
-    requires (sizeof...(Gs) > 0 && sizeof...(Gs) <= Ch.value_)
+template <typename... Gs>
+    requires (sizeof...(Gs) > 0)
 class synthesizer
 {
     static constexpr size_t voice_count = sizeof...(Gs);
 
 public:
-    explicit synthesizer(Gs... g)
-        : generators_(g...)
+    explicit synthesizer(uint32_t sample_rate, uint32_t channel_count, Gs... g)
+        : generators_(g...), sample_rate_(sample_rate), channel_count_(channel_count)
     {
+        if ((channel_count_ % voice_count) != 0 || voice_count > channel_count_)
+            throw std::runtime_error("Invalid number of channels / voice generators");
+            
         ma_device_config config = ma_device_config_init(ma_device_type_playback);
         config.playback.format   = ma_format_f32;
-        config.playback.channels = static_cast<ma_uint32>(Ch.value_);
-        config.sampleRate        = Sr.value_;
+        config.playback.channels = channel_count_;
+        config.sampleRate        = sample_rate_;
         config.dataCallback      = data_callback;
         config.pUserData         = this;
 
@@ -85,11 +87,12 @@ private:
                 self->generators_
             );
 
-            // Distribute to channels: repeat/fill pattern
-            for (size_t ch = 0; ch < Ch.value_; ++ch)
+            uint32_t channel_count = self->channel_count_;
+            // Distribute to channels
+            for (size_t ch = 0; ch < channel_count; ++ch)
             {
                 float sample = voices[ch % voice_count];
-                out[f * Ch.value_ + ch] = sample * math::perceptual_gain(level);
+                out[f * channel_count + ch] = sample * math::perceptual_gain(level);
             }
         }
     }
@@ -100,4 +103,6 @@ private:
 
     bool running_{false};
     bool is_initialized_{false};
+    uint32_t sample_rate_;
+    uint32_t channel_count_;
 };

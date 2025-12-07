@@ -4,9 +4,9 @@
 
 int pink_noise()
 {
-    factory<channels{2}, sample_rate{48000}> f;
+    factory f(48000);
 
-    auto synth = f.synthesizer(f.pink_noise());
+    auto synth = f.synthesizer(2, f.pink_noise());
     synth.set_master_level(0.85f);
 
     if (!synth.start())

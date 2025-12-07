@@ -4,12 +4,12 @@
 
 int white_noise()
 {
-    factory<channels{2}, sample_rate{48000}> f;
+    factory f(48000);
 
     auto noise = f.white_noise();
     auto limited = f.peak_limiter(noise, constant(0.2f)); // tame the peaks
 
-    auto synth = f.synthesizer(limited);
+    auto synth = f.synthesizer(2, limited);
     synth.set_master_level(0.85f);
 
     if (!synth.start())
