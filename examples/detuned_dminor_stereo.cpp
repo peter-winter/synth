@@ -22,8 +22,11 @@ int detuned_dminor_stereo()
         f.sine_wave(constant(notes::D(4) - 0.15_Hz))
     );
 
+    timeline t;
+    auto i = f.instrument(t, voices);
+    
     // Proper polyphony mixing with equal-amplitude (safe default)
-    auto synth = f.synthesizer(2, voices);
+    auto synth = f.synthesizer(2, i);
     synth.set_master_level(0.7f);
 
     if (!synth.start())

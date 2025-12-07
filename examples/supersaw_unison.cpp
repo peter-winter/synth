@@ -24,7 +24,10 @@ int supersaw_unison()
 
     auto safe = f.peak_limiter(voices);
 
-    auto synth = f.synthesizer(2, safe);
+    timeline t;
+    auto i = f.instrument(t, safe);
+    
+    auto synth = f.synthesizer(2, i);
     synth.set_master_level(0.7f);
 
     if (!synth.start())

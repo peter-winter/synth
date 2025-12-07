@@ -13,7 +13,10 @@ int pitch_vibrato()
     auto vibrato = f.mul_add(lfo, constant(5_Hz), constant(440_Hz));
     auto sweeping = f.sine_wave(vibrato);
     
-    auto synth = f.synthesizer(2, sweeping);
+    timeline t;
+    auto i = f.instrument(t, sweeping);
+    
+    auto synth = f.synthesizer(2, i);
     synth.set_master_level(0.7f);
 
     if (!synth.start())

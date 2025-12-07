@@ -6,7 +6,10 @@ int pink_noise()
 {
     factory f(48000);
 
-    auto synth = f.synthesizer(2, f.pink_noise());
+    timeline t;
+    auto i = f.instrument(t, f.pink_noise());
+    
+    auto synth = f.synthesizer(2, i);
     synth.set_master_level(0.85f);
 
     if (!synth.start())

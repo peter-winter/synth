@@ -18,7 +18,11 @@ int sine_volume_square()
     auto modulated = f.volume(square, volume_env);
 
     // One modulated mono signal -> auto-copied to stereo
-    auto synth = f.synthesizer(2, modulated);
+    
+    timeline t;
+    auto i = f.instrument(t, modulated);
+    
+    auto synth = f.synthesizer(2, i);
     synth.set_master_level(0.7f);
 
     if (!synth.start())
