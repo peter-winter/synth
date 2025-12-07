@@ -15,7 +15,7 @@ class synthesizer
 
 public:
     explicit synthesizer(uint32_t sample_rate, uint32_t channel_count, Gs... g)
-        : generators_(g...), sample_rate_(sample_rate), channel_count_(channel_count)
+        : generators_(std::move(g)...), sample_rate_(sample_rate), channel_count_(channel_count)
     {
         if ((channel_count_ % voice_count) != 0 || voice_count > channel_count_)
             throw std::runtime_error("Invalid number of channels / voice generators");

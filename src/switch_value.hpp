@@ -6,16 +6,12 @@
 class switch_value
 {
 public:
-    void set_timeline(timeline* tl) noexcept
-    {
-        t_ = tl;
-    }
+    explicit switch_value(timeline* t)
+        : t_(t)
+    {}
     
     float operator()()
     {
-        if (!t_)
-            return 0.0f;
-
         auto events = t_->get_events();
         for (const auto& ev : events)
         {
@@ -30,6 +26,6 @@ public:
     
 private:
     bool active_{false};
-    note_id latched_id_ = 0;
-    timeline* t_;
+    note_id latched_id_{0};
+    timeline* t_{nullptr};
 };

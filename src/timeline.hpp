@@ -27,6 +27,10 @@ using event = std::variant<note_on, note_off>;
 class timeline
 {
 public:
+    timeline() = default;
+    timeline(timeline&&) = default;
+    timeline(const timeline&) = delete;
+    
     struct timed_event
     {
         sample_index when;
@@ -78,8 +82,8 @@ private:
     }
     
     std::vector<timed_event> events_;
-    sample_index current_sample_ = 0;
-    std::vector<timed_event>::const_iterator next_event_it_ = events_.begin();
+    sample_index current_sample_{0};
+    std::vector<timed_event>::const_iterator next_event_it_{events_.begin()};
 
     static inline const auto empty_view = std::views::empty<timed_event>;
 };

@@ -12,9 +12,9 @@ int stereo_square_copier()
     auto mono = f.square_wave(constant(220_Hz));
 
     timeline t;
-    auto i = f.instrument(t, mono);
+    auto i = f.single_voice_instrument(std::move(t), mono);
     
-    auto synth = f.synthesizer(2, i);
+    auto synth = f.synthesizer(2, std::move(i));
     synth.set_master_level(0.7f);
 
     if (!synth.start())

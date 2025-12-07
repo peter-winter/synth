@@ -9,16 +9,12 @@ constexpr frequency off_frequency = 0.0001_Hz;
 class note_frequency
 {
 public:
-    void set_timeline(timeline* tl) noexcept
-    {
-        t_ = tl;
-    }
+    explicit note_frequency(timeline* t)
+        : t_(t), current_(off_frequency)
+    {}
 
     frequency operator()()
     {
-        if (!t_)
-            return off_frequency;
-
         auto events = t_->get_events();
         for (const auto& ev : events)
         {

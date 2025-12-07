@@ -8,7 +8,8 @@
 #include "timeline.hpp"
 #include "switch_value.hpp"
 #include "note_frequency.hpp"
-#include "instrument.hpp"
+#include "single_voice_instrument.hpp"
+#include "utility.hpp"
 
 #include <utility>
 #include <type_traits>
@@ -18,10 +19,7 @@ struct factory
     factory(uint32_t sample_rate):
         sample_rate_(sample_rate)
     {}
-    
-    template<typename G>
-    using to_g_t = std::result_of_t<G(timeline*)>;
-    
+        
     template<typename F>
     auto sine_wave(F f_b) { return [this, f_b](auto t){ return ::sine_wave<to_g_t<F>>(sample_rate_, f_b(t)); }; }
     
@@ -67,10 +65,10 @@ struct factory
     auto note_frequency() { return [](auto t){ return ::note_frequency(t); }; }
     
     template <typename... Gs>
-    auto synthesizer(uint32_t channel_count, Gs... gs) { return ::synthesizer<Gs...>(sample_rate_, channel_count, gs...); }
+    auto synthesizer(uint32_t channel_count, Gs... gs) { return ::synthesizer<Gs...>(sample_rate_, channel_count, std::move(gs)...); }
     
-    template<typename P>
-    auto instrument(timeline t, P p_b) { return ::instrument<to_g_t<P>>(t, p_b); }
+    template<typename Pb>
+    auto single_voice_instrument(timeline t, Pb p_b) { return ::single_voice_instrument<Pb>(std::move(t), p_b); }
     
     uint32_t sample_rate_;
 };
