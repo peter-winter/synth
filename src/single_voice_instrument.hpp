@@ -2,6 +2,8 @@
 
 #include "timeline.hpp"
 
+#include <optional>
+
 template <typename PatchBuilder>
 class single_voice_instrument
 {
@@ -15,26 +17,34 @@ public:
     {}
     
     single_voice_instrument(const single_voice_instrument&) = delete;
+    single_voice_instrument& operator = (const single_voice_instrument&) = delete;
 
     float operator()()
     {
-        t_.inc();
-        
-        auto events = t_.get_events();
-        for (const auto& ev : events)
+        t_.prepare_events();
+        for (const auto& ev : t_.get_events())
         {
             std::visit(overloaded
             {
-                [this](const note_on& on) { patch_ = patch_b_(&t_); },
-                [this](const note_off& off) {}
+                [&](const sound_on&) { patch_.emplace(patch_b_(&t_)); },
+                [&](const note_on& on) { patch_.emplace(patch_b_(&t_)); },
+                [](auto){}
             }, ev.payload);
         }
         
-        return patch_();
+        float sample = patch_.has_value() ? patch_.value()() : 0.0f;
+        t_.inc();
+        return sample;
     }
-
+    
+    void reset()
+    {
+        t_.reset();
+        patch_.reset();
+    }
+    
 private:
     timeline t_;
     PatchBuilder patch_b_;
-    to_g_t<PatchBuilder> patch_;
+    std::optional<to_g_t<PatchBuilder>> patch_;
 };

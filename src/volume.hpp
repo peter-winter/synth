@@ -16,7 +16,7 @@ public:
     float operator()()
     {
         float sample = sample_gen_();
-        float vol  = volume_gen_();           // still 0.0–1.0 from user
+        float vol  = volume_gen_();           // 0.0–1.0
         float gain = math::perceptual_gain(vol);    // logarithmic magic
         return sample * gain;
     }

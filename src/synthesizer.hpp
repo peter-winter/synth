@@ -7,15 +7,15 @@
 
 #include <iostream>
 
-template <typename... Gs>
-    requires (sizeof...(Gs) > 0)
+template <typename... Is>
+    requires (sizeof...(Is) > 0)
 class synthesizer
 {
-    static constexpr size_t voice_count = sizeof...(Gs);
+    static constexpr size_t voice_count = sizeof...(Is);
 
 public:
-    explicit synthesizer(uint32_t sample_rate, uint32_t channel_count, Gs... g)
-        : generators_(std::move(g)...), sample_rate_(sample_rate), channel_count_(channel_count)
+    explicit synthesizer(uint32_t sample_rate, uint32_t channel_count, Is... is)
+        : instruments_(std::move(is)...), sample_rate_(sample_rate), channel_count_(channel_count)
     {
         if ((channel_count_ % voice_count) != 0 || voice_count > channel_count_)
             throw std::runtime_error("Invalid number of channels / voice generators");
@@ -49,13 +49,18 @@ public:
         if (!is_initialized_ || running_)
             return false;
 
+        running_ = true;
+        
+        std::apply(
+            [](auto&... is) { (is.reset(), ...); },
+            instruments_);
+            
         if (ma_device_start(&device_) != MA_SUCCESS)
         {
             std::cerr << "Failed to start audio device.\n";
             return false;
         }
-
-        running_ = true;
+        
         return true;
     }
 
@@ -69,7 +74,7 @@ public:
     }
 
     bool is_running() const { return running_; }
-
+    
 private:
     static void data_callback(ma_device* device, void* output, const void*, ma_uint32 frame_count)
     {
@@ -83,8 +88,8 @@ private:
         {
             // Generate all available mono signals
             std::array<float, voice_count> voices = std::apply(
-                [](auto&... gen) { return std::array{gen()...}; },
-                self->generators_
+                [](auto&... is) { return std::array{is()...}; },
+                self->instruments_
             );
 
             uint32_t channel_count = self->channel_count_;
@@ -98,7 +103,7 @@ private:
     }
 
     ma_device device_{};
-    std::tuple<Gs...> generators_;
+    std::tuple<Is...> instruments_;
     float master_level_ = 0.5f;
 
     bool running_{false};

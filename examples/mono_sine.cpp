@@ -12,6 +12,7 @@ int mono_sine()
     auto mono_sine = f.sine_wave(constant(440_Hz));
     
     timeline t;
+    t.sound_on_at(0);
     auto i = f.single_voice_instrument(std::move(t), mono_sine);
     
     auto synth = f.synthesizer(1, std::move(i));
@@ -24,7 +25,6 @@ int mono_sine()
 
     std::cout << "440 Hz mono sine wave.\n";
     std::cin.get();
-    
     return 0;
 }
 

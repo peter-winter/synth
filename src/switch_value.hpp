@@ -12,12 +12,13 @@ public:
     
     float operator()()
     {
-        auto events = t_->get_events();
-        for (const auto& ev : events)
+        for (const auto& ev : t_->get_events())
         {
             std::visit(overloaded{
-                [this](const note_on& on)  { latched_id_ = on.id; active_ = true; },
-                [this](const note_off& off){ if (active_ && off.id == latched_id_) active_ = false; }
+                [this](const note_on& on) { latched_id_ = on.id; active_ = true; },
+                [this](const note_off& off){ if (active_ && off.id == latched_id_) active_ = false; },
+                [this](const sound_on&) { active_ = true; },
+                [this](const sound_off&) { active_ = false; }
             }, ev.payload);
         }
 

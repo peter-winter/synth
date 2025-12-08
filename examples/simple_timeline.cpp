@@ -13,6 +13,7 @@ int simple_timeline()
     auto mono_sine = f.volume(f.sine_wave(f.note_frequency()), f.switch_value());
     
     timeline t;
+    t.sound_on_at(0);
     t.note_on_at(f.sample_rate_ * 1, 1, notes::C(4));
     t.note_off_at(f.sample_rate_ * 3, 1);
     t.note_on_at(f.sample_rate_ * 4, 2, notes::E(4));
@@ -28,7 +29,7 @@ int simple_timeline()
         return 1;
     }
 
-    std::cout << "440 Hz mono sine wave, several note sequence on and off.\n";
+    std::cout << "Sine wave, several notes sequence.\n";
     std::cin.get();
     
     return 0;

@@ -22,7 +22,10 @@ struct note_off
     note_id id;
 };
 
-using event = std::variant<note_on, note_off>;
+struct sound_on{};
+struct sound_off{};
+
+using event = std::variant<note_on, note_off, sound_on, sound_off>;
 
 class timeline
 {
@@ -30,6 +33,7 @@ public:
     timeline() = default;
     timeline(timeline&&) = default;
     timeline(const timeline&) = delete;
+    timeline& operator = (const timeline&) = delete;
     
     struct timed_event
     {
@@ -46,6 +50,11 @@ public:
     {
         insert(timed_event{when, note_off{id}});
     }
+    
+    void sound_on_at(sample_index when)
+    {
+        insert(timed_event{when, sound_on{}});
+    }
 
     using events_view = std::ranges::subrange<std::vector<timed_event>::const_iterator>;
         
@@ -54,18 +63,25 @@ public:
         ++current_sample_;
     }
     
-    events_view get_events()
+    void prepare_events()
     {
         if (next_event_it_ == events_.end() || current_sample_ < next_event_it_->when)
-            return {events_.end(), events_.end()};
-
+        {
+            current_events_ = events_view{events_.end(), events_.end()};
+            return;
+        }
+                
         auto upper = std::ranges::upper_bound(
             next_event_it_, events_.end(), current_sample_,
             std::less<>{}, &timed_event::when);
 
-        events_view result{next_event_it_, upper};
+        current_events_ = events_view{next_event_it_, upper};
         next_event_it_ = upper;
-        return result;
+    }
+    
+    events_view get_events() const
+    {
+        return current_events_;
     }
 
     void reset()
@@ -73,7 +89,7 @@ public:
         current_sample_ = 0;
         next_event_it_ = events_.begin();
     }
-
+    
 private:
     void insert(const timed_event& te)
     {
@@ -84,6 +100,5 @@ private:
     std::vector<timed_event> events_;
     sample_index current_sample_{0};
     std::vector<timed_event>::const_iterator next_event_it_{events_.begin()};
-
-    static inline const auto empty_view = std::views::empty<timed_event>;
+    events_view current_events_;
 };

@@ -15,8 +15,7 @@ public:
 
     frequency operator()()
     {
-        auto events = t_->get_events();
-        for (const auto& ev : events)
+        for (const auto& ev : t_->get_events())
         {
             std::visit(overloaded
             {
@@ -30,7 +29,8 @@ public:
                 {
                     if (active_ && off.id == latched_id_)
                         active_ = false;
-                }
+                },
+                [](auto){}
             }, ev.payload);
         }
 

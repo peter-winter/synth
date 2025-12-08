@@ -10,6 +10,7 @@ int white_noise()
     auto limited = f.peak_limiter(noise, constant(0.2f)); // tame the peaks
 
     timeline t;
+    t.sound_on_at(0);
     auto i = f.single_voice_instrument(std::move(t), limited);
     
     auto synth = f.synthesizer(2, std::move(i));
