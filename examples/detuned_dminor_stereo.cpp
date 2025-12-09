@@ -24,7 +24,7 @@ int detuned_dminor_stereo()
 
     timeline t;
     t.sound_on_at(0, 1);
-    auto i = f.single_voice_instrument(std::move(t), voices);
+    auto i = f.mono_instrument(std::move(t), voices);
     
     // Proper polyphony mixing with equal-amplitude (safe default)
     auto synth = f.synthesizer(2, std::move(i));

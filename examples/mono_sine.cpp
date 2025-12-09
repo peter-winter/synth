@@ -13,7 +13,7 @@ int mono_sine()
     
     timeline t;
     t.sound_on_at(0, 1);
-    auto i = f.single_voice_instrument(std::move(t), mono_sine);
+    auto i = f.mono_instrument(std::move(t), mono_sine);
     
     auto synth = f.synthesizer(1, std::move(i));
     synth.set_master_level(0.7f);

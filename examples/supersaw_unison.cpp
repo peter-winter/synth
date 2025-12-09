@@ -26,7 +26,7 @@ int supersaw_unison()
 
     timeline t;
     t.sound_on_at(0, 1);
-    auto i = f.single_voice_instrument(std::move(t), safe);
+    auto i = f.mono_instrument(std::move(t), safe);
     
     auto synth = f.synthesizer(2, std::move(i));
     synth.set_master_level(0.7f);

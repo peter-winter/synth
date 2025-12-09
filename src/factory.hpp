@@ -8,7 +8,8 @@
 #include "timeline.hpp"
 #include "switch_value.hpp"
 #include "note_frequency.hpp"
-#include "single_voice_instrument.hpp"
+#include "mono_instrument.hpp"
+#include "poly_instrument.hpp"
 #include "utility.hpp"
 
 #include <utility>
@@ -76,7 +77,10 @@ struct factory
     auto synthesizer(uint32_t channel_count, Gs... gs) { return ::synthesizer<Gs...>(sample_rate_, channel_count, std::move(gs)...); }
     
     template<typename Pb>
-    auto single_voice_instrument(timeline t, Pb p_b) { return ::single_voice_instrument<Pb>(std::move(t), p_b); }
+    auto mono_instrument(timeline t, Pb p_b) { return ::mono_instrument<Pb>(std::move(t), p_b); }
+    
+    template<typename Pb>
+    auto poly_instrument(uint32_t max_voices, timeline t, Pb p_b) { return ::poly_instrument<Pb>(max_voices, std::move(t), std::move(p_b)); }
     
     uint32_t sample_rate_;
 };

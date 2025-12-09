@@ -8,7 +8,7 @@ struct voice
 {
     std::optional<frequency> f_;
     bool active_{false};
-    uint32_t note_id_;
+    uint32_t note_id_{uint32_t(-1)};
 };
 
 template<typename G>

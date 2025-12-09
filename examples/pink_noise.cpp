@@ -8,7 +8,7 @@ int pink_noise()
 
     timeline t;
     t.sound_on_at(0, 1);
-    auto i = f.single_voice_instrument(std::move(t), f.pink_noise());
+    auto i = f.mono_instrument(std::move(t), f.pink_noise());
     
     auto synth = f.synthesizer(2, std::move(i));
     synth.set_master_level(0.85f);

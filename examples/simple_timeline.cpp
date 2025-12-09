@@ -26,8 +26,8 @@ int simple_timeline()
     t2.sound_on_at(f.sample_rate_ * 4, 2);
     t2.sound_off_at(f.sample_rate_ * 6, 2);
     
-    auto i1 = f.single_voice_instrument(std::move(t1), mono_sine);
-    auto i2 = f.single_voice_instrument(std::move(t2), noise);
+    auto i1 = f.mono_instrument(std::move(t1), mono_sine);
+    auto i2 = f.mono_instrument(std::move(t2), noise);
     
     auto synth = f.synthesizer(2, std::move(i1), std::move(i2));
     synth.set_master_level(0.7f);
