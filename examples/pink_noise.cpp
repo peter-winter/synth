@@ -7,7 +7,7 @@ int pink_noise()
     factory f(48000);
 
     timeline t;
-    t.sound_on_at(0);
+    t.sound_on_at(0, 1);
     auto i = f.single_voice_instrument(std::move(t), f.pink_noise());
     
     auto synth = f.synthesizer(2, std::move(i));

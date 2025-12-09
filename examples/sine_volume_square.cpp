@@ -20,7 +20,7 @@ int sine_volume_square()
     // One modulated mono signal -> auto-copied to stereo
     
     timeline t;
-    t.sound_on_at(0);
+    t.sound_on_at(0, 1);
     auto i = f.single_voice_instrument(std::move(t), modulated);
     
     auto synth = f.synthesizer(2, std::move(i));

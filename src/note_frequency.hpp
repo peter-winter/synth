@@ -1,46 +1,24 @@
 #pragma once
 
-#include "timeline.hpp"
+#include "voice.hpp"
 #include "frequency.hpp"
 #include "utility.hpp"
 
-constexpr frequency off_frequency = 0.0001_Hz;
+constexpr frequency off_frequency = 0.000001_Hz;
 
 class note_frequency
 {
 public:
-    explicit note_frequency(timeline* t)
-        : t_(t), current_(off_frequency)
+    explicit note_frequency(voice* v)
+        : v_(v)
     {}
 
     frequency operator()()
     {
-        for (const auto& ev : t_->get_events())
-        {
-            std::visit(overloaded
-            {
-                [this](const note_on& on)
-                {
-                    latched_id_ = on.id;
-                    current_    = on.freq;
-                    active_     = true;
-                },
-                [this](const note_off& off)
-                {
-                    if (active_ && off.id == latched_id_)
-                        active_ = false;
-                },
-                [](auto){}
-            }, ev.payload);
-        }
-
-        return active_ ? current_ : off_frequency;
+        bool active_ = (v_ != nullptr && v_->active_);
+        return active_ ? v_->f_.value_or(off_frequency) : off_frequency;
     }
 
 private:
-    timeline* t_ = nullptr;
-    note_id latched_id_ = 0;
-    
-    frequency current_;
-    bool active_ = false;
+    voice* v_{nullptr};
 };

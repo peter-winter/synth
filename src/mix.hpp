@@ -8,7 +8,7 @@ enum class polyphony_scale
     equal_power        // divide-by-sqrt(N), supersaw mode
 };
 
-consteval float polyphony_gain(size_t voice_count, polyphony_scale mode)
+constexpr float polyphony_gain(size_t voice_count, polyphony_scale mode)
 {
     if (voice_count <= 1) return 1.0f;
     switch (mode)

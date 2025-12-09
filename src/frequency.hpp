@@ -11,6 +11,8 @@ struct frequency
     constexpr frequency& operator*=(float x) noexcept { hz_ *= x; return *this; }
     constexpr frequency& operator/=(float x) noexcept { hz_ /= x; return *this; }
     
+    constexpr frequency operator-() const noexcept { return frequency(-hz_); }
+    
     float hz_;
 };
 

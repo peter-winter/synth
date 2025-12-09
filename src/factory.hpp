@@ -21,48 +21,56 @@ struct factory
     {}
         
     template<typename F>
-    auto sine_wave(F f_b) { return [sr = sample_rate_, f_b](auto t){ return ::sine_wave<to_g_t<F>>(sr, f_b(t)); }; }
+    auto sine_wave(F f_b) { return [sr = sample_rate_, f_b](auto v){ return ::sine_wave<to_g_t<F>>(sr, f_b(v)); }; }
     
     template<typename F>
-    auto square_wave(F f_b) { return [sr = sample_rate_, f_b](auto t){ return ::square_wave<to_g_t<F>>(sr, f_b(t)); }; }
+    auto square_wave(F f_b) { return [sr = sample_rate_, f_b](auto v){ return ::square_wave<to_g_t<F>>(sr, f_b(v)); }; }
     
     template<typename F>
-    auto saw_wave(F f_b) { return [sr = sample_rate_, f_b](auto t){ return ::saw_wave<to_g_t<F>>(sr, f_b(t)); }; }
+    auto saw_wave(F f_b) { return [sr = sample_rate_, f_b](auto v){ return ::saw_wave<to_g_t<F>>(sr, f_b(v)); }; }
 
     template<typename F>
-    auto down_saw_wave(F f_b) { return [sr = sample_rate_, f_b](auto t)
-        { return [g = ::saw_wave<to_g_t<F>>(sr, f_b(t))]() mutable -> float { return -g(); }; }; }
+    auto down_saw_wave(F f_b) { return [sr = sample_rate_, f_b](auto v)
+        { return [g = ::saw_wave<to_g_t<F>>(sr, f_b(v))]() mutable -> float { return -g(); }; }; }
     
     template<typename F>
-    auto triangle_wave(F f_b) { return [sr = sample_rate_, f_b](auto t){ return ::triangle_wave<to_g_t<F>>(sr, f_b(t)); }; }
+    auto triangle_wave(F f_b) { return [sr = sample_rate_, f_b](auto v){ return ::triangle_wave<to_g_t<F>>(sr, f_b(v)); }; }
     
     auto white_noise() { return [](auto){ return ::white_noise{}; }; }
     
     auto pink_noise()  { return [](auto){ return ::pink_noise{}; }; }
 
     template <typename... Gs>
-    auto mix(Gs... gs_b) { return [gs_b...](auto t){ return ::mix<polyphony_scale::equal_amplitude, to_g_t<Gs>...>(gs_b(t)...); }; }
+    auto mix(Gs... gs_b) { return [gs_b...](auto v){ return ::mix<polyphony_scale::equal_amplitude, to_g_t<Gs>...>(gs_b(v)...); }; }
 
     template <typename... Gs>
-    auto unison(Gs... gs_b) { return [gs_b...](auto t){ return ::mix<polyphony_scale::equal_power, to_g_t<Gs>...>(gs_b(t)...); }; }
+    auto unison(Gs... gs_b) { return [gs_b...](auto v){ return ::mix<polyphony_scale::equal_power, to_g_t<Gs>...>(gs_b(v)...); }; }
 
     template <typename G, typename V>
-    auto volume(G g_b, V v_b) { return [g_b, v_b](auto t){ return ::volume(g_b(t), v_b(t)); }; }
+    auto volume(G g_b, V v_b) { return [g_b, v_b](auto v){ return ::volume(g_b(v), v_b(v)); }; }
 
     template <typename G, typename C = decltype(constant(0.95f)), typename R = decltype(constant(0.999f))>
-    auto peak_limiter(G g_b, C c_b = constant(0.95f), R r_b = constant(0.999f)) { return [g_b, c_b, r_b](auto t)
-        { return ::peak_limiter<to_g_t<G>, to_g_t<C>, to_g_t<R>>(g_b(t), c_b(t), r_b(t)); }; }
+    auto peak_limiter(G g_b, C c_b = constant(0.95f), R r_b = constant(0.999f)) { return [g_b, c_b, r_b](auto v)
+        { return ::peak_limiter<to_g_t<G>, to_g_t<C>, to_g_t<R>>(g_b(v), c_b(v), r_b(v)); }; }
 
     template <typename G, typename M, typename A>
-    auto mul_add(G g_b, M m_b, A a_b) { return [g_b, m_b, a_b](auto t)
-        { return [g = g_b(t), m = m_b(t), a = a_b(t)] mutable { return g() * m() + a(); }; }; }
+    auto mul_add(G g_b, M m_b, A a_b) { return [g_b, m_b, a_b](auto v)
+        { return [g = g_b(v), m = m_b(v), a = a_b(v)] mutable { return g() * m() + a(); }; }; }
     
+    template <typename G, typename M>
+    auto mul(G g_b, M m_b) { return [g_b, m_b](auto v)
+        { return [g = g_b(v), m = m_b(v)] mutable { return g() * m(); }; }; }
+        
     template<typename T>
-    auto bias(T s_b) { return [s_b](auto t){ return [s = s_b(t)] mutable { return s() * 0.5f + 0.5f; }; }; }
+    auto bias(T s_b) { return [s_b](auto v){ return [s = s_b(v)] mutable { return s() * 0.5f + 0.5f; }; }; }
     
-    auto switch_value() { return [](auto t){ return ::switch_value(t); }; }
+    template <typename G, typename A>
+    auto add(G g_b, A a_b) { return [g_b, a_b](auto v)
+        { return [g = g_b(v), a = a_b(v)] mutable { return g() + a(); }; }; }
     
-    auto note_frequency() { return [](auto t){ return ::note_frequency(t); }; }
+    auto switch_value() { return [](auto v){ return ::switch_value(v); }; }
+    
+    auto note_frequency() { return [](auto v){ return ::note_frequency(v); }; }
     
     template <typename... Gs>
     auto synthesizer(uint32_t channel_count, Gs... gs) { return ::synthesizer<Gs...>(sample_rate_, channel_count, std::move(gs)...); }

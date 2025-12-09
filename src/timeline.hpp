@@ -13,17 +13,24 @@ using note_id      = int32_t;
 
 struct note_on
 {
-    note_id id; 
-    frequency freq;
+    note_id id_; 
+    frequency f_;
 };
 
 struct note_off
 {
-    note_id id;
+    note_id id_;
 };
 
-struct sound_on{};
-struct sound_off{};
+struct sound_on
+{
+    note_id id_;
+};
+
+struct sound_off
+{
+    note_id id_;
+};
 
 using event = std::variant<note_on, note_off, sound_on, sound_off>;
 
@@ -51,9 +58,14 @@ public:
         insert(timed_event{when, note_off{id}});
     }
     
-    void sound_on_at(sample_index when)
+    void sound_on_at(sample_index when, note_id id)
     {
-        insert(timed_event{when, sound_on{}});
+        insert(timed_event{when, sound_on{id}});
+    }
+    
+    void sound_off_at(sample_index when, note_id id)
+    {
+        insert(timed_event{when, sound_off{id}});
     }
 
     using events_view = std::ranges::subrange<std::vector<timed_event>::const_iterator>;
