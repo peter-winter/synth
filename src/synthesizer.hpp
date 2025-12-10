@@ -104,7 +104,7 @@ private:
 
     ma_device device_{};
     std::tuple<Is...> instruments_;
-    float master_level_ = 0.5f;
+    float master_level_{0.5f};
 
     bool running_{false};
     bool is_initialized_{false};

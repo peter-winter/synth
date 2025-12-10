@@ -31,9 +31,9 @@ int poly_instrument_progression()
     t.note_on_at(f.sample_rate_ * 8, 8, notes::E(5));
     t.note_off_at(f.sample_rate_ * 11, 8);
     
-    auto i = f.poly_instrument(3, std::move(t), mono_sine);
+    auto ins = f.poly_instrument(3, std::move(t), mono_sine);
     
-    auto synth = f.synthesizer(2, std::move(i));
+    auto synth = f.synthesizer(2, std::move(ins));
     synth.set_master_level(0.7f);
         
     if (!synth.start())
@@ -43,7 +43,7 @@ int poly_instrument_progression()
 
     std::cout << "Poly instrument, simple note progression.\n";
     std::cin.get();
-    
+
     return 0;
 }
 

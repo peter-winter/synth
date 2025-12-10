@@ -17,22 +17,18 @@ class poly_instrument
         float level_env{0.0f};
     };
 
-    static constexpr size_t invalid = size_t(-1);
-
+    static constexpr size_t sentinel = size_t(-1);
+    
 public:
     poly_instrument(uint32_t max_voices, timeline t, PatchBuilder patch_b)
         : max_voices_(max_voices),
-          t_(std::move(t)),
-          patch_b_(patch_b),
-          voices_(max_voices_),
-          order_(max_voices_),
-          note_id_to_voice_(max_voices_, invalid)
-    {}
-    
-    poly_instrument(poly_instrument&& other) = default;
-    
-    poly_instrument(const poly_instrument&) = delete;
-    poly_instrument& operator = (const poly_instrument&) = delete;
+        t_(std::move(t)),
+        patch_b_(patch_b),
+        voices_(max_voices_)
+    {
+        order_[0].resize(max_voices_, sentinel);
+        order_[1].resize(max_voices_, sentinel);
+    }
 
     float operator()()
     {
@@ -40,46 +36,55 @@ public:
         process_events();
 
         float mixed = 0.0f;
-        size_t audible_count = 0;
         size_t write_pos = 0;
+        
+        const auto& read_order = order_[read_idx_];
+        auto& write_order = order_[write_idx_];
 
         for (size_t i = 0; i < active_count_; ++i)
         {
-            size_t idx = order_[i];
-            voice_slot& slot = voices_[idx];
-
+            size_t ring_idx = (head_ + i) % max_voices_;
+            size_t slot_idx = read_order[ring_idx];
+            voice_slot& slot = voices_[slot_idx];
+            
             float sample = (*slot.patch)();
 
             float abs_s = std::abs(sample);
             slot.level_env = std::max(abs_s, slot.level_env * 0.9998f);
 
             mixed += sample;
-            if (slot.level_env > 0.0005f) ++audible_count;
-
+            
             if (slot.v.active_ || slot.level_env >= 0.0001f)
             {
-                order_[write_pos++] = idx;
+                write_order[write_pos++] = slot_idx;
             }
             else
             {
-                note_id_to_voice_[slot.v.note_id_ % max_voices_] = invalid;
                 slot.patch.reset();
             }
         }
-
+    
+        std::swap(read_idx_, write_idx_);
+        head_ = 0;
+        tail_ = write_pos;
         active_count_ = write_pos;
         t_.inc();
 
-        return mixed * polyphony_gain(audible_count, polyphony_scale::equal_power);
+        return mixed * polyphony_gain(active_count_, polyphony_scale::equal_amplitude);
     }
 
     void reset()
     {
         t_.reset();
-        active_count_ = 0;
-        note_id_to_voice_.assign(max_voices_, invalid);
-        voices_.assign(max_voices_, voice_slot{});
+        head_ = tail_ = active_count_ = 0;
+        voices_.assign(max_voices_, {});
+        read_idx_ = 0;
+        write_idx_ = 1;
+        order_[0].assign(max_voices_, sentinel);
+        order_[1].assign(max_voices_, sentinel);
     }
+    
+    size_t max_voices() const { return max_voices_; }
 
 private:
     void process_events()
@@ -87,7 +92,7 @@ private:
         for (const auto& ev : t_.get_events())
         {
             std::visit(overloaded{
-                [this](const note_on&  on)  { do_on(on.id_, on.f_); },
+                [this](const note_on& on)  { do_on(on.id_, on.f_); },
                 [this](const note_off& off) { do_off(off.id_); },
                 [this](const sound_on& on)  { do_on(on.id_, std::nullopt); },
                 [this](const sound_off& off){ do_off(off.id_); }
@@ -98,38 +103,62 @@ private:
     void do_on(note_id id, std::optional<frequency> freq)
     {
         size_t idx = allocate_voice();
-        note_id_to_voice_[id % max_voices_] = idx;
 
-        auto& s = voices_[idx];
-        s.v.active_ = true;
-        s.v.note_id_ = id;
-        s.v.f_ = freq;
-        s.level_env = 1.0f;
-        s.patch.emplace(patch_b_(&s.v));
+        auto& slot = voices_[idx];
+        slot.v.active_ = true;
+        slot.v.note_id_ = id;
+        slot.v.f_ = freq;
+        slot.level_env = 1.0f;
+        slot.patch.emplace(patch_b_(&slot.v));
     }
 
     void do_off(note_id id)
     {
-        size_t idx = note_id_to_voice_[id % max_voices_];
-        if (idx != invalid)
-            voices_[idx].v.active_ = false;
+        auto& order = order_[read_idx_];
+        
+        for (size_t i = 0; i < active_count_; ++i)
+        {
+            size_t ring_idx = (head_ + i) % max_voices_;
+            size_t idx = order[ring_idx];
+            if (voices_[idx].v.note_id_ == id)
+            {
+                voices_[idx].v.active_ = false;
+                return;
+            }
+        }
     }
 
     size_t allocate_voice()
     {
+        auto& order = order_[read_idx_];
         if (active_count_ < max_voices_)
-            return order_[active_count_++] = active_count_;
+        {
+            size_t idx = tail_;
+            tail_ = (tail_ + 1) % max_voices_;
+            order[idx] = idx;
+            ++active_count_;
+            return idx;
+        }
         else
-            return order_[0];  // steal oldest
+        {
+            size_t stolen = order[head_];
+            head_ = (head_ + 1) % max_voices_;
+            return stolen;
+        }
     }
 
     const uint32_t max_voices_;
+
     timeline t_;
     PatchBuilder patch_b_;
 
     std::vector<voice_slot> voices_;
-    std::vector<size_t> order_;
-    size_t active_count_ = 0;
-
-    std::vector<size_t> note_id_to_voice_;
+    std::vector<size_t> order_[2];
+    
+    size_t head_{0};
+    size_t tail_{0};
+    size_t active_count_{0};
+    
+    size_t read_idx_{0};
+    size_t write_idx_{1};
 };

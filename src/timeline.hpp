@@ -102,6 +102,8 @@ public:
         next_event_it_ = events_.begin();
     }
     
+    sample_index current_sample() const { return current_sample_; }
+    
 private:
     void insert(const timed_event& te)
     {
