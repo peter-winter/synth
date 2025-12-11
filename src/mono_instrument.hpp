@@ -33,6 +33,10 @@ public:
         }
         
         float sample = patch_.has_value() ? patch_.value()() : 0.0f;
+        
+        if (!v_.active_ && sample == 0.0f)
+            patch_.reset();
+            
         t_.inc();
         return sample;
     }

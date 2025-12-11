@@ -6,7 +6,7 @@
 #include "synthesizer.hpp"
 #include "peak_limiter.hpp"
 #include "timeline.hpp"
-#include "switch_value.hpp"
+#include "dahdsr.hpp"
 #include "note_frequency.hpp"
 #include "mono_instrument.hpp"
 #include "poly_instrument.hpp"
@@ -69,8 +69,6 @@ struct factory
     auto add(G g_b, A a_b) { return [g_b, a_b](auto v)
         { return [g = g_b(v), a = a_b(v)] mutable { return g() + a(); }; }; }
     
-    auto switch_value() { return [](auto v){ return ::switch_value(v); }; }
-    
     auto note_frequency() { return [](auto v){ return ::note_frequency(v); }; }
     
     template <typename... Gs>
@@ -81,6 +79,23 @@ struct factory
     
     template<typename Pb>
     auto poly_instrument(uint32_t max_voices, timeline t, Pb p_b) { return ::poly_instrument<Pb>(max_voices, std::move(t), std::move(p_b)); }
+    
+    template<typename Pb>
+    auto unison_instrument(uint32_t max_voices, timeline t, Pb p_b) { return ::poly_instrument<Pb, polyphony_scale::equal_power>(max_voices, std::move(t), std::move(p_b)); }
+    
+    template<typename Dly, typename Atk, typename Hld, typename Dec, typename Sus, typename Rel>
+    auto env_dahdsr(Dly dly_b, Atk atk_b, Hld hld_b, Dec dec_b, Sus sus_b, Rel rel_b)
+    {
+        return [sr = sample_rate_, dly_b, atk_b, hld_b, dec_b, sus_b, rel_b](auto v) { return ::dahdsr(v, sr, dly_b(v), atk_b(v), hld_b(v), dec_b(v), sus_b(v), rel_b(v)); };
+    }
+    
+    auto env_sudden() { using namespace std::chrono_literals; return env_dahdsr(constant(0.0s), constant(0.0s), constant(0.0s), constant(0.0s), constant(1.0f), constant(0.0s)); }
+    
+    template<typename Rel>
+    auto env_r(Rel rel_b) { using namespace std::chrono_literals; return env_dahdsr(constant(0.0s), constant(0.0s), constant(0.0s), constant(0.0s), constant(1.0f), rel_b);}
+    
+    template<typename Atk, typename Rel>
+    auto env_ar(Atk atk_b, Rel rel_b) { using namespace std::chrono_literals; return env_dahdsr(constant(0.0s), atk_b, constant(0.0s), constant(0.0s), constant(1.0f), rel_b);}
     
     uint32_t sample_rate_;
 };

@@ -6,29 +6,23 @@
 #include "utility.hpp"
 
 #include <vector>
+#include <algorithm>
 
-template<typename PatchBuilder>
+template<typename PatchBuilder, polyphony_scale Scale = polyphony_scale::equal_amplitude>
 class poly_instrument
 {
     struct voice_slot
     {
         voice v{};
         std::optional<to_g_t<PatchBuilder>> patch;
-        float level_env{0.0f};
     };
 
     static constexpr size_t sentinel = size_t(-1);
     
 public:
     poly_instrument(uint32_t max_voices, timeline t, PatchBuilder patch_b)
-        : max_voices_(max_voices),
-        t_(std::move(t)),
-        patch_b_(patch_b),
-        voices_(max_voices_)
-    {
-        order_[0].resize(max_voices_, sentinel);
-        order_[1].resize(max_voices_, sentinel);
-    }
+        : max_voices_(max_voices), t_(std::move(t)), patch_b_(patch_b)
+    {}
 
     float operator()()
     {
@@ -50,11 +44,10 @@ public:
             float sample = (*slot.patch)();
 
             float abs_s = std::abs(sample);
-            slot.level_env = std::max(abs_s, slot.level_env * 0.9998f);
-
+            
             mixed += sample;
             
-            if (slot.v.active_ || slot.level_env >= 0.0001f)
+            if (slot.v.active_ || sample != 0.0f)
             {
                 write_order[write_pos++] = slot_idx;
             }
@@ -70,14 +63,14 @@ public:
         active_count_ = write_pos;
         t_.inc();
 
-        return mixed * polyphony_gain(active_count_, polyphony_scale::equal_amplitude);
+        return mixed * polyphony_gain(active_count_, Scale);
     }
 
     void reset()
     {
         t_.reset();
         head_ = tail_ = active_count_ = 0;
-        voices_.assign(max_voices_, {});
+        voices_.resize(max_voices_);
         read_idx_ = 0;
         write_idx_ = 1;
         order_[0].assign(max_voices_, sentinel);
@@ -108,7 +101,6 @@ private:
         slot.v.active_ = true;
         slot.v.note_id_ = id;
         slot.v.f_ = freq;
-        slot.level_env = 1.0f;
         slot.patch.emplace(patch_b_(&slot.v));
     }
 

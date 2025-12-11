@@ -15,8 +15,7 @@ public:
 
     frequency operator()()
     {
-        bool active_ = (v_ != nullptr && v_->active_);
-        return active_ ? v_->f_.value_or(off_frequency) : off_frequency;
+        return v_->f_.value_or(off_frequency);
     }
 
 private:

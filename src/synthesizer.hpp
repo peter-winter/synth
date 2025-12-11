@@ -21,11 +21,11 @@ public:
             throw std::runtime_error("Invalid number of channels / voice generators");
             
         ma_device_config config = ma_device_config_init(ma_device_type_playback);
-        config.playback.format   = ma_format_f32;
+        config.playback.format = ma_format_f32;
         config.playback.channels = channel_count_;
-        config.sampleRate        = sample_rate_;
-        config.dataCallback      = data_callback;
-        config.pUserData         = this;
+        config.sampleRate = sample_rate_;
+        config.dataCallback = data_callback;
+        config.pUserData = this;
 
         if (ma_device_init(nullptr, &config, &device_) != MA_SUCCESS)
         {
